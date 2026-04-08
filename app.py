@@ -101,7 +101,6 @@ LANDMARKS = {
     'Jai Mahal Palace': (26.9200, 75.7870),         # Near Junction
     'Narain Niwas Palace': (26.8983, 75.8180),      # Heritage hotel
 }
-}
 
 
 @st.cache_resource
