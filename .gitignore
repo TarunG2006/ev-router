@@ -1,0 +1,63 @@
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Large raw data files (users should download/generate separately)
+data/raw/*.tif
+data/raw/srtm_cache/
+
+# Keep processed graph and model (needed for Streamlit deployment)
+# data/processed/*.graphml  -- KEEP for deployment
+# models/*.pkl              -- KEEP for deployment
+
+# IDE settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Cache directories
+cache/
+.cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# pytest
+.pytest_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
