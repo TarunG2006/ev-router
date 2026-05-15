@@ -188,14 +188,6 @@ The system auto-detects the format and preprocesses accordingly.
 python -m pytest tests/ -v --cov=src
 ```
 
-## Future Improvements
-
-- [x] ~~Integration with real Kaggle EV telemetry dataset~~
-- [x] ~~Battery-aware LPA\* benchmarking~~
-- [ ] Multi-vehicle fleet routing optimization
-- [ ] Charging station waypoint integration
-- [ ] Real-time traffic API integration
-- [ ] D\* Lite comparison (backward search variant)
 
 ## References
 
@@ -206,7 +198,6 @@ python -m pytest tests/ -v --cov=src
 ## Author
 
 **Tarun** - IIT Guwahati  
-SDE Intern Project | DSA + ML
 
 ## License
 
