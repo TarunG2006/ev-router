@@ -59,6 +59,17 @@ class DeliverySimulation:
         })
         return new_path is not None, replan_ms
 
+    def _resume_step(self):
+        """
+        After a replan, find where in the new path the car currently is.
+        FIX: previously always reset to step=0, which re-traversed the
+        entire path from the start node instead of resuming from the
+        car's actual current position.
+        """
+        if self.path and self.position in self.path:
+            return self.path.index(self.position)
+        return 0
+
     def run(self, road_closures=None, battery_noise_std=0.10):
         random.seed()
 
@@ -96,7 +107,8 @@ class DeliverySimulation:
                     return self._result(success=False, reason="replan_failed")
                 n_replans += 1
                 total_replan_ms += ms
-                step = 0
+                # FIX: resume from current position, not from path start
+                step = self._resume_step()
                 continue
 
             edata = self._get_edge_data(u, v)
@@ -113,9 +125,9 @@ class DeliverySimulation:
                 self.battery_model, slope, dist_km, speed, road_type
             )) * max(0.5, noise)
 
-            self.battery -= actual
-            self.position = v
-            steps_taken  += 1
+            self.battery  -= actual
+            self.position  = v
+            steps_taken   += 1
 
             # Disruption 1: Road closure
             if step in closure_at:
@@ -127,7 +139,8 @@ class DeliverySimulation:
                     return self._result(success=False, reason="no_path_after_closure")
                 n_replans += 1
                 total_replan_ms += ms
-                step = 0
+                # FIX: resume from current position, not from path start
+                step = self._resume_step()
                 continue
 
             # Disruption 2: Battery deviation > 15%
@@ -140,17 +153,20 @@ class DeliverySimulation:
                         if self.G.has_edge(ru, rv):
                             for k in self.G[ru][rv]:
                                 old_w = float(self.G[ru][rv][k].get('weight', 1.0))
-                                new_w = old_w * scale
-                                self.G[ru][rv][k]['weight'] = new_w
-                                self.lpa.update_edge_weight(ru, rv, new_w)
-                    self.log.append({"event": "battery_deviation",
-                                     "deviation_pct": round(deviation * 100, 2),
-                                     "scale": round(scale, 3), "step": step})
+                                self.G[ru][rv][k]['weight'] = old_w * scale
+                                self.lpa.update_edge_weight(ru, rv, old_w * scale)
+                    self.log.append({
+                        "event"         : "battery_deviation",
+                        "deviation_pct" : round(deviation * 100, 2),
+                        "scale"         : round(scale, 3),
+                        "step"          : step
+                    })
                     ok, ms = self._do_replan("battery_deviation")
                     if ok:
                         n_replans += 1
                         total_replan_ms += ms
-                    step = 0
+                    # FIX: resume from current position, not from path start
+                    step = self._resume_step()
                     continue
 
             step += 1

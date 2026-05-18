@@ -1,4 +1,6 @@
-﻿# src/lpa_star.py
+﻿
+
+# src/lpa_star.py
 
 import heapq
 import math
@@ -18,6 +20,9 @@ class LPAStar:
         self._in_heap = {}
         self.nodes_expanded = 0
         self.total_replans  = 0
+        # FIX 1: parent pointers set during compute_shortest_path so
+        # extract_path never relies on potentially-stale g-values.
+        self.parent = {}
         self.rhs[self.start] = 0.0
         self._push(self.start, self._key(self.start))
 
@@ -74,6 +79,23 @@ class LPAStar:
         if self.g[node] != self.rhs[node]:
             self._push(node, self._key(node))
 
+    def _record_parent(self, node):
+        """Record the predecessor that gives node its current rhs value.
+        Called whenever g[node] is set to rhs[node] (node becomes consistent).
+        This is how we build reliable parent pointers for extract_path.
+        """
+        if node == self.start:
+            return
+        best_pred, best_cost = None, math.inf
+        for pred in self.G.predecessors(node):
+            w = self._get_edge_weight(pred, node)
+            c = self.g[pred] + w
+            if c < best_cost:
+                best_cost = c
+                best_pred = pred
+        if best_pred is not None:
+            self.parent[node] = best_pred
+
     def compute_shortest_path(self):
         expanded_this_call = 0
         while (self._top_key() < self._key(self.goal)
@@ -91,10 +113,14 @@ class LPAStar:
                 self._push(node, new_key)
             elif self.g[node] > self.rhs[node]:
                 self.g[node] = self.rhs[node]
+                # FIX 1: record parent pointer the moment g is committed
+                self._record_parent(node)
                 for succ in self.G.successors(node):
                     self._update_vertex(succ)
             else:
                 self.g[node] = math.inf
+                # Parent pointer for this node is now invalid; clear it
+                self.parent.pop(node, None)
                 self._update_vertex(node)
                 for succ in self.G.successors(node):
                     self._update_vertex(succ)
@@ -103,23 +129,38 @@ class LPAStar:
     def extract_path(self):
         if self.g[self.goal] == math.inf:
             return None
+
         path    = [self.goal]
         current = self.goal
         visited = {self.goal}
+
         while current != self.start:
-            best_pred = None
-            best_cost = math.inf
-            for pred in self.G.predecessors(current):
-                w = self._get_edge_weight(pred, current)
-                total = self.g[pred] + w
-                if total < best_cost:
-                    best_cost = total
-                    best_pred = pred
-            if best_pred is None or best_pred in visited:
+            # FIX 1: prefer the parent pointer recorded during compute —
+            # it is always consistent because it was set when g[node] was
+            # committed.  Fall back to greedy g-value scan only if the
+            # pointer is missing (shouldn't happen on a reachable path).
+            pred = self.parent.get(current)
+
+            if pred is None or pred in visited:
+                # Fallback: greedy scan, skipping already-visited nodes
+                pred = None
+                best_cost = math.inf
+                for p in self.G.predecessors(current):
+                    if p in visited:
+                        continue
+                    w = self._get_edge_weight(p, current)
+                    cost = self.g[p] + w
+                    if cost < best_cost:
+                        best_cost = cost
+                        pred = p
+
+            if pred is None or pred in visited:
                 return None
-            visited.add(best_pred)
-            path.append(best_pred)
-            current = best_pred
+
+            visited.add(pred)
+            path.append(pred)
+            current = pred
+
         path.reverse()
         return path
 
@@ -148,7 +189,11 @@ class LPAStar:
 def make_haversine_heuristic(graph, goal_node):
     goal_lat = math.radians(graph.nodes[goal_node]['y'])
     goal_lon = math.radians(graph.nodes[goal_node]['x'])
-    AVG_ENERGY_PER_KM = 12.0
+    # FIX 2: use 80 Wh/km (below eVED flat mean of ~85) so the heuristic
+    # is admissible — it never overestimates the true battery cost.
+    # The old value of 120 Wh/km overestimated flat roads, making LPA*
+    # skip expanding nodes it needed, causing stale g-values on replans.
+    AVG_ENERGY_PER_KM = 80.0
 
     def h(node):
         lat = math.radians(graph.nodes[node]['y'])

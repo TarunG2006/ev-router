@@ -11,53 +11,61 @@ __pycache__/
 .Python
 *.so
 
-# Large raw data files (users should download/generate separately)
+# ── Data files ────────────────────────────────────────────
+# Raw data — large, download/generate separately
+data/raw/*.csv
+data/raw/*.graphml
 data/raw/*.tif
 data/raw/srtm_cache/
 
-# Keep processed graph and model (needed for Streamlit deployment)
-# data/processed/*.graphml  -- KEEP for deployment
-# models/*.pkl              -- KEEP for deployment
+# Keep processed graph and trained model — needed for Streamlit deployment
+# data/processed/*.graphml  ← KEEP
+# data/processed/*.csv      ← KEEP (benchmark results)
+# models/*.pkl              ← KEEP
 
-# IDE settings
+# ── Utility/scratch scripts (not part of core project) ────
+check_kaggle.py
+run_benchmark_50.py
+sanity_check.py
+fix_elevation.py
+demo.py
+
+# ── IDE settings ──────────────────────────────────────────
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
 
-# OS files
+# ── OS files ──────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Jupyter notebooks
+# ── Jupyter ───────────────────────────────────────────────
 .ipynb_checkpoints/
 *.ipynb
 
-# Cache directories
+# ── Cache directories ─────────────────────────────────────
 cache/
 .cache/
+.streamlit/
 
-# Coverage reports
+# ── Coverage & testing artifacts ──────────────────────────
 htmlcov/
 .coverage
 .coverage.*
 coverage.xml
 *.cover
-
-# pytest
 .pytest_cache/
 
-# Build artifacts
+# ── Build artifacts ───────────────────────────────────────
 build/
 dist/
 *.egg-info/
 *.egg
 
-# Logs
+# ── Logs & env ────────────────────────────────────────────
 *.log
-
-# Environment files
 .env
 .env.local

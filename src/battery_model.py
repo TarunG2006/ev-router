@@ -319,7 +319,7 @@ def train_battery_model():
 
     # Clean - filter reasonable Wh/km rates (50-1000 Wh/km for EV)
     # Typical EV: 150-250 Wh/km, allow wider range for extreme conditions
-    df = df[(df[config.ML_TARGET] > 50) & (df[config.ML_TARGET] < 1000)]
+    df = df[(df[config.ML_TARGET] > 5) & (df[config.ML_TARGET] < 500)]
     df = df.dropna(subset=config.ML_FEATURES + [config.ML_TARGET])
     print(f"After cleaning: {len(df)} rows")
 
